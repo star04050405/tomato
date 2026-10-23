@@ -1,7 +1,7 @@
 {
-  "name": "tomato. 番茄田 · 专注一下",
-  "short_name": "tomato.",
-  "description": "一颗一颗专心长大：线条番茄计时涨汁，熟了就填满收进田里",
+  "name": "pomodoro. 番茄工作法 · 一颗一颗专心长大",
+  "short_name": "pomodoro.",
+  "description": "Un pomodoro alla volta：灰番茄计时催熟，熟了撒花盖表情章",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#FDFBF6",

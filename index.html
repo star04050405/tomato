@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>tomato. 番茄田 · 一颗一颗专心长大</title>
+<title>pomodoro. 番茄工作法 · 一颗一颗专心长大</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-v3-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-v3.png">
@@ -90,10 +90,12 @@
     padding:3px 12px;border-radius:999px;letter-spacing:.06em;margin-bottom:10px;
   }
   .stage .tag.done{background:var(--green)}
-  #stageTom{margin:2px auto 0}
-  .tj-box{position:relative;display:inline-flex;align-items:flex-end;justify-content:center;line-height:1}
+  #stageTom{margin:0 auto}
+  .stage-gap{height:14px}
+  .tj-box{position:relative;display:grid;line-height:1}
+  .tj-box>span{grid-area:1/1;display:flex;align-items:center;justify-content:center}
   .tj-g{filter:grayscale(1);opacity:.4}
-  .tj-c{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;transition:clip-path .9s linear}
+  .tj-c{transition:clip-path .9s linear}
   .tj-mood{position:absolute;top:0;right:-4px;font-size:.26em;background:#fff;border:2.5px solid var(--red);border-radius:50%;width:1.7em;height:1.7em;display:flex;align-items:center;justify-content:center;box-shadow:1.5px 1.5px 0 rgba(46,42,38,.15)}
   .tj-box.done .tj-c{animation:tpop .45s}
   @keyframes tpop{0%{transform:scale(.85)}55%{transform:scale(1.1)}100%{transform:scale(1)}}
@@ -169,12 +171,12 @@
 
 <div class="wrap">
   <header class="hero">
-    <div class="brand">tomato<i>.</i></div>
-    <div class="slogan">番茄田 · 一颗一颗，专心长大</div>
+    <div class="brand">pomodoro<i>.</i></div>
+    <div class="slogan">番茄工作法 · 一颗一颗，专心长大</div>
   </header>
 
   <div class="harvest">
-    <div class="h-card red"><b id="cntDone">0</b><span>今天熟的番茄 🍅</span></div>
+    <div class="h-card red"><b id="cntDone">0</b><span>今天熟的 pomodori 🍅</span></div>
     <div class="h-card"><b id="cntMins">0<small style="font-size:13px"> 分钟</small></b><span>今天的专注总量</span></div>
   </div>
 
@@ -182,6 +184,7 @@
   <div class="stage" id="stage">
     <span class="tag" id="stageTag">专注中</span>
     <div id="stageTom" class="tj-box" aria-hidden="true"><span class="tj-g">🍅</span><span class="tj-c" style="clip-path:inset(101% 0 0 0)">🍅</span></div>
+    <div class="stage-gap"></div>
     <div class="clock" id="clock">25:00</div>
     <div class="task-name" id="stageName">—</div>
     <div class="pct" id="stagePct">涨汁 0%</div>
@@ -198,15 +201,15 @@
     <div class="sizes">
       <div class="size-btn" data-size="L" role="button" tabindex="0">
         <span class="tom" style="font-size:40px">🍅</span>
-        <b>大番茄</b><small>深潜 50 分</small>
+        <b>Pomodone</b><small>大番茄 · 深潜 50 分</small>
       </div>
       <div class="size-btn on" data-size="M" role="button" tabindex="0">
         <span class="tom" style="font-size:32px">🍅</span>
-        <b>中番茄</b><small>经典 25 分</small>
+        <b>Pomodoro</b><small>中番茄 · 经典 25 分</small>
       </div>
       <div class="size-btn" data-size="S" role="button" tabindex="0">
         <span class="tom" style="font-size:24px">🍅</span>
-        <b>小番茄</b><small>微专注 10 分</small>
+        <b>Pomodorino</b><small>小番茄 · 微专注 10 分</small>
       </div>
     </div>
     <div class="mins-edit">⏱ 自定义分钟：<input type="number" id="minsInput" min="1" max="180" value="25" inputmode="numeric">（留空用默认）</div>
@@ -215,7 +218,7 @@
 
   <!-- 番茄田 -->
   <div class="field-h">
-    <h2>番茄田</h2>
+    <h2>番茄田 · la mia vigna</h2>
     <span id="fieldCount">0 颗 · 0 熟</span>
   </div>
   <div class="field" id="field"></div>
@@ -244,7 +247,7 @@
 (function(){
 'use strict';
 /* ---------- 常量与状态 ---------- */
-var SIZES={L:{label:'大番茄',mins:50,r:118},M:{label:'中番茄',mins:25,r:92},S:{label:'小番茄',mins:10,r:66}};
+var SIZES={L:{label:'Pomodone · 大番茄',mins:50,r:112},M:{label:'Pomodoro · 中番茄',mins:25,r:88},S:{label:'Pomodorino · 小番茄',mins:10,r:62}};
 var MOODS=['✓','★','☺'];
 var RED='#E64B35', RED_DEEP='#C93A26', INK='#2B2B2B';
 var todayStr=function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -313,7 +316,7 @@ function render(){
 }
 function renderStage(t){
   var prog=t.done?1:progressOf(t);
-  $('stageTom').outerHTML=tomSVG(270,{name:'',stage:true,progress:prog,fill:t.done,mood:t.mood,id:1}).replace('class="tj-box"','id="stageTom" class="tj-box"');
+  $('stageTom').outerHTML=tomSVG(236,{name:'',stage:true,progress:prog,fill:t.done,mood:t.mood}).replace('class="tj-box"','id="stageTom" class="tj-box"');
   var rem=msLeft(t);
   $('clock').textContent=paused?fmtClock(remainingMs):fmtClock(rem);
   $('stageName').textContent=t.name;
