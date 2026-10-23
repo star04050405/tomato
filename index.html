@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>tomato. 番茄田 · 一颗一颗专心长大</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-v2-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-v2.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-v3-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-v3.png">
 <meta name="theme-color" content="#F26A2E">
 <style>
   :root{
@@ -90,7 +90,13 @@
     padding:3px 12px;border-radius:999px;letter-spacing:.06em;margin-bottom:10px;
   }
   .stage .tag.done{background:var(--green)}
-  #stageTom{display:block;margin:2px auto 0}
+  #stageTom{margin:2px auto 0}
+  .tj-box{position:relative;display:inline-flex;align-items:flex-end;justify-content:center;line-height:1}
+  .tj-g{filter:grayscale(1);opacity:.4}
+  .tj-c{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;transition:clip-path .9s linear}
+  .tj-mood{position:absolute;top:0;right:-4px;font-size:.26em;background:#fff;border:2.5px solid var(--red);border-radius:50%;width:1.7em;height:1.7em;display:flex;align-items:center;justify-content:center;box-shadow:1.5px 1.5px 0 rgba(46,42,38,.15)}
+  .tj-box.done .tj-c{animation:tpop .45s}
+  @keyframes tpop{0%{transform:scale(.85)}55%{transform:scale(1.1)}100%{transform:scale(1)}}
   .clock{font-size:52px;font-weight:800;letter-spacing:.02em;line-height:1;font-variant-numeric:tabular-nums}
   .stage .task-name{font-size:16px;font-weight:700;margin-top:8px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .stage .pct{font-size:12px;color:var(--ink-soft);margin-top:3px}
@@ -175,7 +181,7 @@
   <!-- 舞台 -->
   <div class="stage" id="stage">
     <span class="tag" id="stageTag">专注中</span>
-    <svg id="stageTom" width="270" height="264" viewBox="0 0 120 120" aria-hidden="true"></svg>
+    <div id="stageTom" class="tj-box" aria-hidden="true"><span class="tj-g">🍅</span><span class="tj-c" style="clip-path:inset(101% 0 0 0)">🍅</span></div>
     <div class="clock" id="clock">25:00</div>
     <div class="task-name" id="stageName">—</div>
     <div class="pct" id="stagePct">涨汁 0%</div>
@@ -191,15 +197,15 @@
     <input type="text" id="taskName" maxlength="24" placeholder="这段时间专心做什么？（写在番茄上）">
     <div class="sizes">
       <div class="size-btn" data-size="L" role="button" tabindex="0">
-        <svg class="tom" width="44" height="43" viewBox="0 0 120 120"><use href="#tomOutline"/></svg>
+        <span class="tom" style="font-size:40px">🍅</span>
         <b>大番茄</b><small>深潜 50 分</small>
       </div>
       <div class="size-btn on" data-size="M" role="button" tabindex="0">
-        <svg class="tom" width="36" height="35" viewBox="0 0 120 120"><use href="#tomOutline"/></svg>
+        <span class="tom" style="font-size:32px">🍅</span>
         <b>中番茄</b><small>经典 25 分</small>
       </div>
       <div class="size-btn" data-size="S" role="button" tabindex="0">
-        <svg class="tom" width="28" height="27" viewBox="0 0 120 120"><use href="#tomOutline"/></svg>
+        <span class="tom" style="font-size:24px">🍅</span>
         <b>小番茄</b><small>微专注 10 分</small>
       </div>
     </div>
@@ -233,25 +239,12 @@
 <div class="toast" id="toast"></div>
 
 <!-- 番茄形状模板 -->
-<svg width="0" height="0" style="position:absolute">
-  <defs>
-    <g id="tomLeaf">
-      <path d="M 60,40 L 44,33 L 53,25 L 60,32 L 67,25 L 76,33 Z" fill="#3F9B4F" stroke="#2F7C3D" stroke-width="3.2" stroke-linejoin="round"/>
-      <path d="M 60,30 C 60,24 62,20 65,17" fill="none" stroke="#2F7C3D" stroke-width="4" stroke-linecap="round"/>
-    </g>
-    <path id="tomBody" d="M 60,34 C 44,22 24,28 16,44 C 8,60 12,82 24,96 C 34,108 46,114 60,114 C 74,114 86,108 96,96 C 108,82 112,60 104,44 C 96,28 76,22 60,34 Z"/>
-  </defs>
-  <symbol id="tomOutline" viewBox="0 0 120 120">
-    <use href="#tomBody" fill="#fff" stroke="#E64B35" stroke-width="5.6" stroke-linejoin="round"/>
-    <use href="#tomLeaf"/>
-  </symbol>
-</svg>
 
 <script>
 (function(){
 'use strict';
 /* ---------- 常量与状态 ---------- */
-var SIZES={L:{label:'大番茄',mins:50,r:150},M:{label:'中番茄',mins:25,r:120},S:{label:'小番茄',mins:10,r:98}};
+var SIZES={L:{label:'大番茄',mins:50,r:118},M:{label:'中番茄',mins:25,r:92},S:{label:'小番茄',mins:10,r:66}};
 var MOODS=['✓','★','☺'];
 var RED='#E64B35', RED_DEEP='#C93A26', INK='#2B2B2B';
 var todayStr=function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -271,40 +264,14 @@ var fieldEl=$('field'),emptyEl=$('empty'),stageEl=$('stage');
 var uid=0;
 function tomSVG(sizePx,opts){
   opts=opts||{};
-  uid++;
-  var cid='clip'+uid;
-  var w=sizePx,h=Math.round(sizePx*118/120);
-  var sw=opts.stage?4.6:5.6;
-  var stroke=opts.fill?RED:RED;
-  var bodyD=document.getElementById('tomBody').getAttribute('d');
-  var juiceY=120-120*((opts.fill?1:opts.progress)||0); // fill=熟卡：全满
-  if(!(opts.progress>0)&&!opts.fill)juiceY=128; // 0% 时藏在 viewBox 外（波峰 123.5 不可见），但节点始终存在供 tick 更新
-  var txtColor=opts.fill?'#fff':(opts.progress>0.5?'#fff':INK);
-  var name=opts.name||'';
-  var nameFs=opts.stage?15:(sizePx>=140?14:sizePx>=115?12.5:11);
-  var showName=name?esc(cut(name,opts.stage?10:(sizePx>=115?6:5))):'';
-  var s='<svg class="tSvg" width="'+w+'" height="'+h+'" viewBox="0 0 120 120" style="display:block;margin:0 auto">';
-  s+='<defs><clipPath id="'+cid+'"><path d="'+bodyD+'"/></clipPath></defs>';
-  s+='<path d="'+bodyD+'" fill="#fff"/>';
-  {
-    s+='<g clip-path="url(#'+cid+')">';
-    s+='<rect class="juiceRect" x="8" y="'+juiceY.toFixed(1)+'" width="104" height="120" fill="'+RED+'" opacity="'+(opts.fill?'1':'0.92')+'"/>';
-    s+='<path class="juiceWave" d="M 8,'+juiceY.toFixed(1)+' Q 60 '+(juiceY-4.5).toFixed(1)+' 112 '+juiceY.toFixed(1)+' L 112 '+(juiceY+6).toFixed(1)+' Q 60 '+(juiceY+1.5).toFixed(1)+' 8 '+(juiceY+6).toFixed(1)+' Z" fill="'+RED+'"/>';
-    s+='</g>';
-  }
-  s+='<path d="'+bodyD+'" fill="none" stroke="'+stroke+'" stroke-width="'+sw+'" stroke-linejoin="round"'+(opts.fill?'':' ')+'/>';
-  s+='<use href="#tomLeaf"/>';
-  if(opts.fill||opts.progress>0.5){
-    // 红底上压一点高光
-    s+='<path d="M 34,44 C 30,52 29,62 31,70" stroke="rgba(255,255,255,.55)" stroke-width="5" fill="none" stroke-linecap="round"/>';
-  }
-  if(showName){
-    s+='<text class="tomTxt" x="60" y="'+(opts.stage?58:66)+'" text-anchor="middle" font-size="'+nameFs+'" font-weight="800" fill="'+txtColor+'" font-family="inherit">'+showName+'</text>';
-  }
-  if(opts.fill&&opts.mood){
-    s+='<text x="60" y="'+(opts.stage?82:88)+'" text-anchor="middle" font-size="13" fill="rgba(255,255,255,.95)">'+opts.mood+'</text>';
-  }
-  s+='</svg>';
+  var p=opts.fill?1:Math.max(0,Math.min(1,opts.progress||0));
+  var clipP=p<=0?101:Math.round((1-p)*1000)/10;
+  var mood=opts.fill&&opts.mood?opts.mood:'';
+  var s='<div class="tj-box'+(opts.fill?' done':'')+'" style="width:'+sizePx+'px;height:'+sizePx+'px;font-size:'+Math.round(sizePx*0.74)+'px">';
+  s+='<span class="tj-g">🍅</span>';
+  s+='<span class="tj-c" style="clip-path:inset('+clipP+'% 0 0 0)">🍅</span>';
+  if(mood)s+='<span class="tj-mood">'+mood+'</span>';
+  s+='</div>';
   return s;
 }
 function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -346,7 +313,7 @@ function render(){
 }
 function renderStage(t){
   var prog=t.done?1:progressOf(t);
-  $('stageTom').outerHTML=tomSVG(270,{name:'',stage:true,progress:prog,fill:t.done,mood:t.mood,id:1}).replace('class="tSvg"','id="stageTom" class="tSvg"');
+  $('stageTom').outerHTML=tomSVG(270,{name:'',stage:true,progress:prog,fill:t.done,mood:t.mood,id:1}).replace('class="tj-box"','id="stageTom" class="tj-box"');
   var rem=msLeft(t);
   $('clock').textContent=paused?fmtClock(remainingMs):fmtClock(rem);
   $('stageName').textContent=t.name;
@@ -388,24 +355,13 @@ function startTick(){
       $('stagePct').textContent='涨汁 '+Math.round(prog*100)+'%';
       var svg=$('stageTom');
       if(svg){
-        var bodyD=document.getElementById('tomBody').getAttribute('d');
-        var cid='stageclip';
-        var juiceY=120-120*prog;
-        // 只更新汁水矩形（轻量）
-        var rect=svg.querySelector('.juiceRect'),wave=svg.querySelector('.juiceWave');
-        if(rect){rect.setAttribute('y',juiceY.toFixed(1));}
-        if(wave){wave.setAttribute('d','M 8,'+juiceY.toFixed(1)+' Q 60 '+(juiceY-4.5).toFixed(1)+' 112 '+juiceY.toFixed(1)+' L 112 '+(juiceY+6).toFixed(1)+' Q 60 '+(juiceY+1.5).toFixed(1)+' 8 '+(juiceY+6).toFixed(1)+' Z');}
-        var txt=svg.querySelector('.tomTxt');
-        if(txt){txt.setAttribute('fill',prog>0.5?'#fff':INK);}
+        var cEl=svg.querySelector('.tj-c');
+        if(cEl&&!t.done){cEl.style.clipPath='inset('+Math.max(0,(1-prog)*100)+'% 0 0 0)';}
       }
       // 田里小番茄同步水位
       var card=fieldEl.querySelector('.tom-card.running');
       if(card){
-        var small=card.querySelector('svg');
-        var r2=small&&small.querySelector('.juiceRect');
-        if(r2){r2.setAttribute('y',juiceY.toFixed(1));}
-        var w2=small&&small.querySelector('.juiceWave');
-        if(w2){w2.setAttribute('d','M 8,'+juiceY.toFixed(1)+' Q 60 '+(juiceY-4.5).toFixed(1)+' 112 '+juiceY.toFixed(1)+' L 112 '+(juiceY+6).toFixed(1)+' Q 60 '+(juiceY+1.5).toFixed(1)+' 8 '+(juiceY+6).toFixed(1)+' Z');}
+        var c2=card.querySelector('.tj-c');
       }
     }
   },500);
