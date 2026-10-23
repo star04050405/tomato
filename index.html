@@ -341,9 +341,9 @@ function startRun(t){
   endAt=Date.now()+t.mins*60000;
   remainingMs=t.mins*60000;
   startTick();
-  stageEl.scrollIntoView({behavior:'smooth',block:'start'});
   toast('开种！番茄开始长 🌱');
-  render();
+  render();  // 先把舞台显示并渲染好
+  setTimeout(function(){stageEl.scrollIntoView({behavior:'auto',block:'start'});},60);  // 布局稳定后立刻跳过去
 }
 function startTick(){
   clearInterval(tickTimer);
