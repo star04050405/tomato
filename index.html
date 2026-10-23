@@ -189,7 +189,6 @@
     <div class="task-name" id="stageName">—</div>
     <div class="pct" id="stagePct">涨汁 0%</div>
     <div class="stage-btns">
-      <button class="btn ghost" id="btnPause">⏸ 暂停</button>
       <button class="btn ghost" id="btnGiveup">💧 算了</button>
     </div>
   </div>
@@ -281,7 +280,7 @@ function esc(s){return s.replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&
 function cut(s,n){return s.length>n?s.slice(0,n-1)+'…':s}
 
 /* ---------- 渲染田 ---------- */
-var activeId=null,paused=false,remainingMs=0,endAt=0,tickTimer=null;
+var activeId=null,endAt=0,tickTimer=null;
 function render(){
   // 田
   var html='';
@@ -318,17 +317,14 @@ function renderStage(t){
   var prog=t.done?1:progressOf(t);
   $('stageTom').outerHTML=tomSVG(236,{name:'',stage:true,progress:prog,fill:t.done,mood:t.mood}).replace('class="tj-box"','id="stageTom" class="tj-box"');
   var rem=msLeft(t);
-  $('clock').textContent=paused?fmtClock(remainingMs):fmtClock(rem);
+  $('clock').textContent=fmtClock(rem);
   $('stageName').textContent=t.name;
   $('stagePct').textContent=t.done?'熟透了 🍅':'涨汁 '+Math.round(prog*100)+'%';
   $('stageTag').className='tag'+(t.done?' done':'');
   $('stageTag').textContent=t.done?'收成':'专注中';
-  $('btnPause').textContent=paused?'▶ 继续':'⏸ 暂停';
-  $('btnPause').style.display=t.done?'none':'';
 }
 /* ---------- 计时 ---------- */
 function progressOf(t){
-  if(paused)return 1-(remainingMs/(t.mins*60000));
   return Math.min(1,1-msLeft(t)/(t.mins*60000));
 }
 function msLeft(t){return Math.max(0,endAt-Date.now())}
@@ -337,9 +333,8 @@ function fmtClock(ms){
   return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 function startRun(t){
-  activeId=t.id;paused=false;
+  activeId=t.id;
   endAt=Date.now()+t.mins*60000;
-  remainingMs=t.mins*60000;
   startTick();
   toast('开种！番茄开始长 🌱');
   render();  // 先把舞台显示并渲染好
@@ -350,7 +345,7 @@ function startTick(){
   tickTimer=setInterval(function(){
     var t=state.tasks.filter(function(x){return x.id===activeId&&!x.done})[0];
     if(!t){clearInterval(tickTimer);return}
-    if(!paused){
+    if(true){
       var rem=msLeft(t);
       if(rem<=0){finish(t);return}
       $('clock').textContent=fmtClock(rem);
@@ -371,14 +366,13 @@ function startTick(){
 }
 function finish(t){
   t.done=true;t.mood=MOODS[Math.floor(Math.random()*MOODS.length)];t.doneAt=Date.now();
-  activeId=null;paused=false;clearInterval(tickTimer);
+  activeId=null;clearInterval(tickTimer);
   confetti();ding();
   toast('「'+t.name+'」熟了！🍅');
   render();
   $('stageTag').textContent='收成';
   $('stageTag').className='tag done';
   $('stagePct').textContent='熟透了 🍅';
-  $('btnPause').style.display='none';
   setTimeout(function(){if(!activeId&&stageEl.classList.contains('show')&&t&&t.done){stageEl.classList.remove('show');}},3500);
 }
 /* ---------- 音效 ---------- */
@@ -434,7 +428,7 @@ function openSheet(t){
   }else{
     add('▶ 开始专心（计时涨汁）','go-run',function(){startRun(t);});
     add('🍅 已经熟了（直接收成）','harvest',function(){t.done=true;t.mood=MOODS[Math.floor(Math.random()*MOODS.length)];t.doneAt=Date.now();confetti();toast('「'+t.name+'」熟了！');render();});
-    add('🗑 从田里移走','danger',function(){if(t.id===activeId){activeId=null;paused=false;clearInterval(tickTimer);}state.tasks=state.tasks.filter(function(x){return x.id!==t.id});render();});
+    add('🗑 从田里移走','danger',function(){if(t.id===activeId){activeId=null;clearInterval(tickTimer);}state.tasks=state.tasks.filter(function(x){return x.id!==t.id});render();});
   }
   $('mask').classList.add('show');$('sheet').classList.add('show');
 }
@@ -453,15 +447,8 @@ fieldEl.addEventListener('click',function(e){
 $('btnGiveup').addEventListener('click',function(){
   var t=state.tasks.filter(function(x){return x.id===activeId})[0];
   if(!t)return;
-  activeId=null;paused=false;clearInterval(tickTimer);
+  activeId=null;clearInterval(tickTimer);
   toast('汁水退掉了，没关系 🌿');
-  render();
-});
-$('btnPause').addEventListener('click',function(){
-  var t=state.tasks.filter(function(x){return x.id===activeId&&!x.done})[0];
-  if(!t)return;
-  if(!paused){paused=true;remainingMs=msLeft(t);toast('暂停 · 汁水先冻住');}
-  else{paused=false;endAt=Date.now()+remainingMs;toast('继续长 🍅');}
   render();
 });
 $('soundBtn').addEventListener('click',function(){state.sound=!state.sound;render();});
