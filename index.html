@@ -306,7 +306,11 @@ var activeId=null,endAt=0,tickTimer=null;
 function render(){
   // 田
   var html='';
-  state.tasks.slice().reverse().filter(function(t){return !t.done}).forEach(function(t){
+  var doneList=state.tasks.filter(function(t){return t.done}).slice().reverse(); // 新收的在前
+  var overflowIds={};
+  doneList.slice(9).forEach(function(t){overflowIds[t.id]=1});  // 第 10 颗起进筐
+  state.tasks.slice().reverse().forEach(function(t){
+    if(t.done&&overflowIds[t.id])return;
     var size=SIZES[t.size].r;
     var isDone=!!t.done;
     var running=t.id===activeId&&!isDone;
@@ -322,9 +326,13 @@ function render(){
   });
   fieldEl.innerHTML=html;
   var undone=state.tasks.filter(function(t){return !t.done}).length;
+  var total=state.tasks.length;
   emptyEl.style.display=undone?'none':'block';
+  if(!undone&&total)emptyEl.innerHTML='全部收进筐啦 🧺<br><b>种新的</b>，或者点上面的筐看看今天的收成';
   var doneN=state.tasks.filter(function(t){return t.done}).length;
-  $('basketN').textContent=doneN;
+  var inBasket=Math.max(0,doneN-9);
+  $('basketN').textContent=inBasket;
+  $('btnBasket').style.display=inBasket?'':'none';  // 筐空时弱化隐藏
   var mins=state.tasks.filter(function(t){return t.done}).reduce(function(a,t){return a+t.mins},0);
   $('cntDone').textContent=doneN;
   $('cntMins').innerHTML=mins+'<small style="font-size:13px"> 分钟</small>';
@@ -431,7 +439,7 @@ function confetti(){
 /* ---------- 收成筐 ---------- */
 var basketEl=$('basket');
 function openBasket(){
-  var done=state.tasks.filter(function(t){return t.done}).slice().reverse();
+  var done=state.tasks.filter(function(t){return t.done}).slice().reverse().slice(9); // 只显示进筐的
   $('bsMeta').textContent=done.length?('今天收了 '+done.length+' 颗 · '+done.reduce(function(a,t){return a+t.mins},0)+' 分钟'):'今天收的都在这里';
   $('bsList').innerHTML=done.length?done.map(function(t){
     return '<div class="bs-item"><span class="moodchip">'+(t.mood||'🍅')+'</span>'+
