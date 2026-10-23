@@ -112,9 +112,21 @@
   .field-h h2{font-size:17px;font-weight:800}
   .field-h h2::before{content:"🍅 "}
   .field-h span{font-size:12px;color:var(--ink-soft)}
-  .field{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+  .field{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+  @media(min-width:900px){.field{grid-template-columns:repeat(5,minmax(0,1fr))}}
+  .basket-btn{border:1.5px solid var(--ink);background:#fff;border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:800;cursor:pointer;box-shadow:2px 2px 0 rgba(43,43,43,.55)}
+  .basket-btn:active{transform:translate(1px,1px);box-shadow:1px 1px 0 rgba(43,43,43,.55)}
+  .bs-item{display:flex;align-items:center;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line)}
+  .bs-item:last-child{border-bottom:0}
+  .bs-item .moodchip{font-size:20px;flex:none}
+  .bs-item .bi{flex:1;min-width:0}
+  .bs-item .bi b{display:block;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bs-item .bi small{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:2px}
+  .bs-item .act{flex:none;border:0;background:#F3EDE2;color:var(--ink);width:30px;height:30px;border-radius:50%;font-size:13px;cursor:pointer}
+  .bs-item .act.del{background:#FBE9E5;color:var(--red-deep)}
+  .bs-item .act:active{transform:scale(.92)}
   .tom-card{
-    background:var(--card);border:2px solid var(--ink);border-radius:16px;padding:12px 8px 10px;
+    background:var(--card);border:2px solid var(--ink);border-radius:14px;padding:10px 6px 8px;
     text-align:center;cursor:pointer;transition:.15s;box-shadow:3px 3px 0 rgba(43,43,43,.55);position:relative;
   }
   .tom-card:active{transform:translate(1px,1px)}
@@ -222,10 +234,10 @@
   <!-- 番茄田 -->
   <div class="field-h">
     <h2>番茄田 · la mia vigna</h2>
-    <span id="fieldCount">0 颗 · 0 熟</span>
+    <button class="basket-btn" id="btnBasket">🧺 筐 <b id="basketN">0</b></button>
   </div>
   <div class="field" id="field"></div>
-  <div class="empty" id="empty">田里还空着。<br><b>种一颗番茄</b>，点它就开始专心；来不及计时的话，点「已经熟了」也算数 🍅</div>
+  <div class="empty" id="empty">田里还空着。<br><b>种一颗番茄</b>，点它就开始专心；来不及计时的话，点「已经熟了」也算数 🍅<br>熟了的会收进上面的 🧺 筐里</div>
 
   <footer>
     <div class="mira">Miracles happen every day.</div>
@@ -235,6 +247,12 @@
 
 <!-- sheet -->
 <div class="mask" id="mask"></div>
+<div class="sheet" id="basket">
+  <div class="grab"></div>
+  <div class="t-title">🧺 收成筐 · la cesta</div>
+  <div class="t-meta" id="bsMeta">今天收的都在这里</div>
+  <div id="bsList" style="margin-top:10px"></div>
+</div>
 <div class="sheet" id="sheet">
   <div class="grab"></div>
   <div class="t-title" id="shTitle">番茄</div>
@@ -250,7 +268,7 @@
 (function(){
 'use strict';
 /* ---------- 常量与状态 ---------- */
-var SIZES={L:{label:'Pomodone · 大番茄',mins:50,r:112},M:{label:'Pomodoro · 中番茄',mins:25,r:88},S:{label:'Pomodorino · 小番茄',mins:10,r:62}};
+var SIZES={L:{label:'Pomodone · 大番茄',mins:50,r:74},M:{label:'Pomodoro · 中番茄',mins:25,r:60},S:{label:'Pomodorino · 小番茄',mins:10,r:46}};
 var MOODS=['✓','★','☺'];
 var RED='#E64B35', RED_DEEP='#C93A26', INK='#2B2B2B';
 var todayStr=function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
@@ -288,7 +306,7 @@ var activeId=null,endAt=0,tickTimer=null;
 function render(){
   // 田
   var html='';
-  state.tasks.slice().reverse().forEach(function(t){
+  state.tasks.slice().reverse().filter(function(t){return !t.done}).forEach(function(t){
     var size=SIZES[t.size].r;
     var isDone=!!t.done;
     var running=t.id===activeId&&!isDone;
@@ -303,9 +321,10 @@ function render(){
       '</div>';
   });
   fieldEl.innerHTML=html;
-  emptyEl.style.display=state.tasks.length?'none':'block';
+  var undone=state.tasks.filter(function(t){return !t.done}).length;
+  emptyEl.style.display=undone?'none':'block';
   var doneN=state.tasks.filter(function(t){return t.done}).length;
-  $('fieldCount').textContent=state.tasks.length+' 颗 · '+doneN+' 熟';
+  $('basketN').textContent=doneN;
   var mins=state.tasks.filter(function(t){return t.done}).reduce(function(a,t){return a+t.mins},0);
   $('cntDone').textContent=doneN;
   $('cntMins').innerHTML=mins+'<small style="font-size:13px"> 分钟</small>';
@@ -372,7 +391,7 @@ function finish(t){
   t.done=true;t.mood=MOODS[Math.floor(Math.random()*MOODS.length)];t.doneAt=Date.now();
   activeId=null;clearInterval(tickTimer);
   confetti();ding();
-  toast('「'+t.name+'」熟了！🍅');
+  toast('「'+t.name+'」熟了！收进筐 🧺');
   render();
   $('stageTag').textContent='收成';
   $('stageTag').className='tag done';
@@ -409,6 +428,29 @@ function confetti(){
     setTimeout(function(el){return function(){el.remove()}}(e),4200);
   }
 }
+/* ---------- 收成筐 ---------- */
+var basketEl=$('basket');
+function openBasket(){
+  var done=state.tasks.filter(function(t){return t.done}).slice().reverse();
+  $('bsMeta').textContent=done.length?('今天收了 '+done.length+' 颗 · '+done.reduce(function(a,t){return a+t.mins},0)+' 分钟'):'今天收的都在这里';
+  $('bsList').innerHTML=done.length?done.map(function(t){
+    return '<div class="bs-item"><span class="moodchip">'+(t.mood||'🍅')+'</span>'+
+      '<span class="bi"><b>'+esc(t.name)+'</b><small>'+SIZES[t.size].label+' · '+t.mins+' 分 · '+new Date(t.doneAt).formatHM()+' 收</small></span>'+
+      '<button class="act" data-a="replant" data-id="'+t.id+'" aria-label="重新种">↩</button>'+
+      '<button class="act del" data-a="del" data-id="'+t.id+'" aria-label="删记录">✕</button></div>';
+  }).join(''):'<div class="bs-empty" style="text-align:center;color:var(--ink-soft);font-size:13.5px;padding:22px 0">筐还空着——<br>熟一颗，收一颗 🍅</div>';
+  basketEl.classList.add('show');$('mask').classList.add('show');
+}
+function closeBasket(){basketEl.classList.remove('show');if(!$('sheet').classList.contains('show'))$('mask').classList.remove('show');}
+$('btnBasket').addEventListener('click',openBasket);
+$('bsList').addEventListener('click',function(e){
+  var b=e.target.closest('button.act');if(!b)return;
+  var id=+b.getAttribute('data-id'),act=b.getAttribute('data-a');
+  var t=state.tasks.filter(function(x){return x.id===id})[0];if(!t)return;
+  if(act==='replant'){t.done=false;t.mood=null;t.doneAt=null;closeBasket();toast('重新种回田里 🌱');render();}
+  else if(act==='del'){state.tasks=state.tasks.filter(function(x){return x.id!==id});if(t.id===activeId){activeId=null;clearInterval(tickTimer);}render();openBasket();}
+});
+
 /* ---------- toast / sheet ---------- */
 var toastTimer=null;
 function toast(msg){
@@ -440,7 +482,7 @@ function closeSheet(){$('mask').classList.remove('show');$('sheet').classList.re
 Date.prototype.formatHM=function(){return String(this.getHours()).padStart(2,'0')+':'+String(this.getMinutes()).padStart(2,'0')};
 
 /* ---------- 事件 ---------- */
-$('mask').addEventListener('click',closeSheet);
+$('mask').addEventListener('click',function(){closeSheet();closeBasket();});
 fieldEl.addEventListener('click',function(e){
   var card=e.target.closest('.tom-card');
   if(!card)return;
